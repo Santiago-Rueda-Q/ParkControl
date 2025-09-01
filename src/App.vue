@@ -1,27 +1,11 @@
 <script setup>
 import HelloWorld from './layouts/HelloWorld.vue'
-import prueba from './views/prueba.vue';
+import AppLayout from '@/layouts/AppLayout.vue'
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <AppLayout />
   
-  <h1 class="text-3xl font-bold underline">
-        Hello world!
-  </h1>
-    <main style="padding: 2rem">
-    <PButton label="Guardar" icon="pi pi-check" />
-  </main>
-  
-  <prueba />
 </template>
 
 <style scoped>
