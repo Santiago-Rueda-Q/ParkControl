@@ -12,5 +12,3 @@
 @layer utilities {
   .bg-sidebar { background-color: #203342; }
 }
-
-html, body, #app { height: 100%; }
