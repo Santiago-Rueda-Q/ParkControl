@@ -1,4 +1,3 @@
-// src/services/navigation.service.js
 export function getNavItems() {
     return [
         { labelEs: 'Ingresos', path: '/entries',  icon: 'pi pi-car' },
