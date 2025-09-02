@@ -1,5 +1,4 @@
 <script setup>
-import HelloWorld from './layouts/HelloWorld.vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 </script>
 
