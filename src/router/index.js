@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-const EntriesView = () => import('@/views/EntriesView.vue')
-const ExitsView = () => import('@/views/ExitsView.vue')
-const MapView = () => import('@/views/MapView.vue')
-const ClientsView = () => import('@/views/ClientsView.vue')
-const ReportsView = () => import('@/views/ReportsView.vue')
-const RatesView = () => import('@/views/RatesView.vue')
-const SlotsView = () => import('@/views/SlotsView.vue')
-const SettingsView = () => import('@/views/SettingsView.vue')
+const EntriesView = () => import('@/views/Entries/EntriesView.vue')
+const ExitsView = () => import('@/views/Exits/ExitsView.vue')
+const MapView = () => import('@/views/Map/MapView.vue')
+const ClientsView = () => import('@/views/Client/ClientsView.vue')
+const ReportsView = () => import('@/views/Reports/ReportsView.vue')
+const RatesView = () => import('@/views/Rates/RatesView.vue')
+const SlotsView = () => import('@/views/Slots/SlotsView.vue')
+const SettingsView = () => import('@/views/Settings/SettingsView.vue')
 
 const routes = [
 { path: '/', redirect: '/entries' },
