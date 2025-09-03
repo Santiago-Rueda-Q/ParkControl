@@ -140,3 +140,8 @@ npm install
 
 npm run build
 
+##👥 Authors
+
+Santiago Rueda Quintero
+Eliecer Guevara Fuentes
+Lisandro Rueda Thomas
