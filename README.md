@@ -126,8 +126,12 @@ Its modular design allows for an easy transition from local storage to a real AP
 ├── 📄 package-lock.json
 ├── 📄 package.json
 └── 📄 vite.config.js
-## 🚀 Installation & Execution  
 
+# 🚀 Installation & Execution  
+
+### 📥 Clone repository  
 ```bash
-git clone https://github.com/usuario/ParkControl.git && cd ParkControl && npm install && npm run dev
+git clone https://github.com/usuario/ParkControl.git
+cd ParkControl
+
 
