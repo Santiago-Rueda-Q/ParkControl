@@ -129,9 +129,14 @@ Its modular design allows for an easy transition from local storage to a real AP
 
 # 🚀 Installation & Execution  
 
-### 📥 Clone repository  
+<details>
+<summary>📥 Clone Repository</summary>
+
 ```bash
 git clone https://github.com/usuario/ParkControl.git
 cd ParkControl
 
+npm install
+
+npm run build
 
