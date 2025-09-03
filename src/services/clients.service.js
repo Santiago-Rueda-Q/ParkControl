@@ -3,7 +3,11 @@ const digitsOnly = (s) => String(s || "").replace(/\D+/g, "");
 export class ClientsService {
     constructor(repo) { this.repo = repo }
 
-    async list() { return await this.repo.listAll() }
+    async list() {
+        if (typeof this.repo.listAll === 'function') return await this.repo.listAll()
+        if (typeof this.repo.list    === 'function') return await this.repo.list()
+        return []
+    }    
     
     async create(data) {
         const name  = (data.name  || '').trim();

@@ -1,4 +1,4 @@
-import { SlotsRepository } from '@/domain/slots/SlotsRepository'
+import { SlotsRepository } from '@/Domain/Slots/SlotsRepository'
 
 const STORAGE_KEY = 'pc:slots-config'
 

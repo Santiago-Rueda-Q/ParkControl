@@ -1,65 +1,81 @@
-import { DEFAULT_CATEGORIES } from '@/Domain/Slots/categories'
-import di from '@/services/di'
-
-    export class EntriesService {
+export class EntriesService {
     /** @param {import('@/Domain/Entries/EntriesRepository').EntriesRepository} repo */
     constructor(repo) { this.repo = repo }
 
+    normalizePlate(raw) {
+
+        const cleaned = String(raw ?? '')
+        .toUpperCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[‐-‒–—−]/g, '-')        
+        .replace(/[^A-Z0-9]/g, '');        
+
+        const letters = (cleaned.match(/[A-Z]/g) || []).join('').slice(0, 3);
+        const digits  = (cleaned.match(/\d/g)   || []).join('').slice(0, 3);
+
+        if (letters.length === 3 && digits.length === 3) {
+        return `${letters}-${digits}`;
+        }
+        throw new Error('Placa inválida (AAA-123).');
+    }
+
     async listActive() {
-        return await this.repo.listActive()
+        const list = await this.repo.listActive()
+        return list.sort((a,b) => new Date(a.startedAtISO) - new Date(b.startedAtISO))
     }
 
     async summaryByType() {
-        const [cats, active] = await Promise.all([
-        di.slotsService.getCategoriesWithValues(),
-        this.repo.listActive(),
-        ])
-
-        const counters = Object.fromEntries(DEFAULT_CATEGORIES.map(c => [c.key, 0]))
-        for (const e of active) {
-        if (counters[e.type] != null) counters[e.type]++
+        const list = await this.listActive()
+        const m = { car:0, motorcycle:0, bicycle:0, vip:0, disability:0 }
+        for (const e of list) {
+        if (m[e.type] != null) m[e.type]++
+        if (e.vip)        m.vip++
+        if (e.disability) m.disability++
         }
-
-        return cats.map(c => ({
-        key: c.key, label: c.label, icon: c.icon,
-        occupied: counters[c.key] ?? 0,
-        capacity: Number(c.value ?? 0)
-        }))
+        return m
     }
 
-    async canPark(type) {
-        const s = await this.summaryByType()
-        const row = s.find(x => x.key === type)
-        if (!row) return false
-        return row.occupied < row.capacity
+    async isPlateActive(plate) {
+        const list = await this.listActive()
+        const p = plate.toUpperCase()
+        return list.some(e => (e.plate||'').toUpperCase() === p)
     }
 
-    /**
-     * @param {import('@/Domain/Entries/Entry.schema').Entry} data
-     */
+    async isSlotOccupied(slotCode) {
+        const p = (slotCode||'').toUpperCase()
+        const list = await this.listActive()
+        return list.some(e => (e.slotCode||'').toUpperCase() === p)
+    }
+
     async registerEntry(data) {
-        if (!data.plate || !data.type || !data.slotCode) {
-        throw new Error('Faltan datos obligatorios (placa, tipo, espacio).')
-        }
-        const active = await this.repo.listActive()
-        const exists = active.some(e => e.plate.toUpperCase() === data.plate.toUpperCase())
-        if (exists) throw new Error('La placa ya tiene un ingreso activo.')
+        const plate = this.normalizePlate(data.plate)  
 
-        if (!(await this.canPark(data.type))) {
-        throw new Error('No hay cupos disponibles para el tipo seleccionado.')
+        if (!data.type)     throw new Error('Seleccione tipo de vehículo.')
+        if (!data.slotCode) throw new Error('Seleccione espacio.')
+
+        if (await this.isPlateActive(plate)) {
+        throw new Error('La placa ya tiene un ingreso activo.')
+        }
+        if (await this.isSlotOccupied(data.slotCode)) {
+        throw new Error('El espacio seleccionado ya está ocupado.')
         }
 
         const entry = {
-        ...data,
+        id: crypto?.randomUUID?.() || String(Date.now()),
+        plate,
+        type: data.type,
+        slotCode: String(data.slotCode).toUpperCase(),
         vip: !!data.vip,
         disability: !!data.disability,
-        client: data.client ?? null,
+        client: data.client || 'Cliente Ocasional',
         startedAtISO: new Date().toISOString(),
         }
-        return await this.repo.create(entry)
+
+        await this.repo.add(entry)
+        return entry
     }
 
     async checkOutByPlate(plate) {
-        return await this.repo.checkOutByPlate(plate)
+        return await this.repo.removeByPlate(plate)
     }
-    }
+}

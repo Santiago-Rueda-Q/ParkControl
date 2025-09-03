@@ -1,8 +1,8 @@
 export class EntriesRepository {
-    /** @returns {Promise<Array<object>>} */
+    /** @returns {Promise<Array>} */
     async listActive() { throw new Error('Not implemented') }
-    /** @param {object} entry */
-    async create(entry) { throw new Error('Not implemented') }
+    /** @param {any} entry */
+    async add(entry) { throw new Error('Not implemented') }
     /** @param {string} plate */
-    async checkOutByPlate(plate) { throw new Error('Not implemented') }
+    async removeByPlate(plate) { throw new Error('Not implemented') }
 }
