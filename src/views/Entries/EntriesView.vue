@@ -32,18 +32,19 @@ import VehicleForm from '@/components/entries/VehicleForm.vue'
 import LocationCard from '@/components/entries/LocationCard.vue'
 import ParkedTable from '@/components/entries/ParkedTable.vue'
 import EntriesHeaderStats from '@/components/entries/EntriesHeaderStats.vue'
+import { value } from '@primeuix/themes/aura/knob'
 
 const form = reactive({
     plate: '', type: 'car', vip: false, disability: false,
     client: null, slotCode: ''
 })
 
-const clients = ref(['Cliente Ocasional','Santiago Rueda']) 
+const clients = ref(['Cliente Ocasional']) 
 const stats = ref([])
 const active = ref([])
 
 const typeOptions = DEFAULT_CATEGORIES.map(c => ({ key: c.key, label: c.label }))
-const slotOptions = ['A1','A2','A4','A5','A6','M1','M2','M3'] 
+const slotOptions = ['A1','A2','A4','A5','A6','M1','M2','M3'].map(x=>({label: x, value: x}))
 
 async function refresh() {
     stats.value = await di.entriesService.summaryByType()
@@ -52,6 +53,7 @@ async function refresh() {
 
 async function register() {
     try {
+        form.plate = (form.plate || '').trim().toUpperCase()
         await di.entriesService.registerEntry({ ...form })
         form.plate = ''; form.slotCode = ''
         await refresh()

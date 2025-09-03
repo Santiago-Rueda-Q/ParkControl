@@ -13,7 +13,7 @@
 
         <div>
             <label class="block text-sm mb-1"><i class="pi pi-car mr-2"></i>Tipo de Vehículo:</label>
-            <Dropdown
+            <Select
                 v-model="local.type"
                 :options="typeOptions"
                 optionLabel="label" optionValue="key"
@@ -49,7 +49,7 @@
 <script setup>
 import { reactive, watch } from 'vue'
 import InputText  from 'primevue/inputtext'
-import Dropdown   from 'primevue/dropdown'
+import Select   from 'primevue/select'
 import Checkbox   from 'primevue/checkbox'
 
 const props = defineProps({

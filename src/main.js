@@ -19,7 +19,7 @@ app.use(PrimeVue, {
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
+import Select  from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -27,7 +27,7 @@ import Column from 'primevue/column'
 app.component('PButton', Button)
 app.component('InputNumber', InputNumber)
 app.component('InputText', InputText)
-app.component('Dropdown', Dropdown)
+app.component('Select', Select)
 app.component('Checkbox', Checkbox)
 app.component('DataTable', DataTable)
 app.component('Column', Column)
