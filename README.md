@@ -31,7 +31,7 @@ Its modular design allows for an easy transition from local storage to a real AP
 
 ## 📂 Project Structure  
 
-```bash
+```
 ├── 📁 .git/             🚫 (hidden)
 ├── 📁 .vscode/          🚫 (local config)
 ├── 📁 ParkControl/
@@ -127,22 +127,22 @@ Its modular design allows for an easy transition from local storage to a real AP
 ├── 📄 package-lock.json
 ├── 📄 package.json
 └── 📄 vite.config.js
-
+```
+---
 # 🚀 Installation & Execution  
 
-<details>
-<summary>📥 Clone Repository</summary>
 
-```bash
+```
 git clone https://github.com/usuario/ParkControl.git
 cd ParkControl
 
 npm install
 
 npm run build
-
-##👥 Authors
-
+```
+---
+## 👥 Authors
 Santiago Rueda Quintero
 Eliecer Guevara Fuentes
 Lisandro Rueda Thomas
+---
