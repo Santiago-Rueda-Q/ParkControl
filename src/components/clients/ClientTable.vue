@@ -13,7 +13,7 @@
             <Column field="email" header="Email" />
             <Column header="Tipo" style="width:120px">
             <template #body="{ data }">
-                <i v-if="data.vip" class="pi pi-crown text-amber-500 mr-2" /> {{ data.vip ? 'VIP' : '—' }}
+                <i v-if="data.vip" class="pi pi-crown text-amber-500 mr-2" /> {{ data.vip ? 'VIP' : 'Regular' }}
             </template>
             </Column>
             <Column header="Acciones" style="width:140px">
@@ -45,7 +45,7 @@ const props = defineProps({
     rows: { type: Array, default: () => [] },
     total: { type: Number, default: 0 },
     page:  { type: Number, default: 1 },     
-    rowsPerPage: { type: Number, default: 10 }
+    rowsPerPage: { type: Number, default: 6 }
 })
 const emit = defineEmits(['page','delete'])
 

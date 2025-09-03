@@ -23,7 +23,13 @@ import Select  from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Paginator from 'primevue/paginator'
+import ConfirmationService from 'primevue/confirmationservice'
+import ConfirmDialog from 'primevue/confirmdialog'
 
+app.use(ConfirmationService)
+app.component('ConfirmDialog', ConfirmDialog)
+app.component('Paginator', Paginator)
 app.component('PButton', Button)
 app.component('InputNumber', InputNumber)
 app.component('InputText', InputText)
