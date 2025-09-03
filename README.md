@@ -1,13 +1,12 @@
 # 🚗 ParkControl  
 
 **Technologies:**  
-- Vue 3  
-- Vite  
-- TailwindCSS  
-- PrimeVue  
-- Flowbite  
+- [Vue 3](https://vuejs.org/)  
+- [Vite](https://vitejs.dev/)  
+- [TailwindCSS](https://tailwindcss.com/)  
+- [PrimeVue](https://primevue.org/)  
+- [Flowbite](https://flowbite.com/docs/getting-started/vue/)  
 
----
 
 ## 📖 Description  
 
