@@ -41,7 +41,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import Select from 'primevue/Select'
+import Select from 'primevue/select'
 import Button from 'primevue/button'
 
 const props = defineProps({
