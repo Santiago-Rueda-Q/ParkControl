@@ -1,48 +1,52 @@
-import { v4 as uuid } from 'uuid'
+export class ExitsService {
 
-export default class ExitsService {
-  constructor({ exitsRepo, entriesRepo, feesService, slotsService }) {
-    this.exitsRepo = exitsRepo
-    this.entriesRepo = entriesRepo
-    this.feesService = feesService
-    this.slotsService = slotsService
+  constructor(repo, entriesService, ratesService) {
+    this.repo = repo
+    this.entriesService = entriesService
+    this.ratesService = ratesService
   }
 
-  async recordExitByPlate(plate, { cashierId=null, paymentMethod='cash' } = {}) {
-    const normalized = (plate || '').toUpperCase().trim()
-    const entry = await this.entriesRepo.findByPlate(normalized)
-    if (!entry) throw new Error('No active entry found')
-
-    const endedAt = new Date().toISOString()
-    const startedAt = new Date(entry.startedAtISO)
-    const durationMin = Math.ceil((new Date(endedAt) - startedAt) / 60000)
-    const amountCents = this.feesService.calculate({ type: entry.type, minutes: durationMin })
-
-    const exitRecord = {
-      id: uuid(),
-      entryId: entry.id,
-      plate: entry.plate,
-      type: entry.type,
-      slotCode: entry.slotCode,
-      startedAtISO: entry.startedAtISO,
-      endedAtISO: endedAt,
-      durationMinutes: durationMin,
-      amountCents,
-      cashierId,
-      paymentMethod,
-      createdAt: new Date().toISOString()
-    }
-    await this.exitsRepo.create(exitRecord)
-
-    await this.entriesRepo.removeByPlate(normalized)
-    if (this.slotsService && typeof this.slotsService.decrementOccupied === 'function') {
-      await this.slotsService.decrementOccupied(entry.type)
-    }
-
-    return exitRecord
+  async listActiveFiltered(query = '', page = 1, size = 6) {
+    const q = (query || '').trim().toUpperCase()
+    const all = await this.entriesService.listActive()
+    const filtered = q ? all.filter(e => (e.plate || '').toUpperCase().includes(q)) : all
+    const total = filtered.length
+    const start = (page - 1) * size
+    const items = filtered.slice(start, start + size)
+    return { items, total }
   }
 
-  async list({ page=1, size=20, q='' } = {}) {
-    return this.exitsRepo.list({ page, size, q })
+  async findActiveByPlate(plate) {
+    const p = (plate || '').toUpperCase()
+    const all = await this.entriesService.listActive()
+    return all.find(e => (e.plate || '').toUpperCase() === p) || null
   }
+
+  async buildInvoice(plate) {
+    const entry = await this.findActiveByPlate(plate)
+    if (!entry) throw new Error('No se encontró un ingreso activo con esa placa.')
+
+    const endedAtISO = new Date().toISOString()
+    const hours = this.ratesService.billableHours(entry.startedAtISO, endedAtISO)
+    const rate  = await this.ratesService.pricePerHour(entry.type, { vip: entry.vip, disability: entry.disability })
+    const total = Math.round(hours * rate * 100) / 100
+
+    return { entry, hours, ratePerHour: rate, total, endedAtISO }
+  }
+
+  async processExit(plate) {
+    const invoice = await this.buildInvoice(plate)
+    const removed = await this.entriesService.checkOutByPlate(plate)
+    if (!removed) throw new Error('No había un ingreso activo para esa placa.')
+    await this.repo.append({
+      ...invoice.entry,
+      endedAtISO: invoice.endedAtISO,
+      hours: invoice.hours,
+      ratePerHour: invoice.ratePerHour,
+      total: invoice.total,
+    })
+    return invoice
+  }
+
+  async history() { return await this.repo.list() }
 }

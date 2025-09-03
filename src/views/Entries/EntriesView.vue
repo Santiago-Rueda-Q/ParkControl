@@ -1,77 +1,79 @@
 <template>
-    <div class="space-y-6">
-        <div class="h-12 flex items-center px-4 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700">
-            <span class="font-semibold">Registrar Ingreso</span>
-        <div class="ml-auto"><EntriesHeaderStats :stats="stats" /></div>
+    <section class="space-y-6">
+        <div class="flex items-center gap-2">
+            <i class="pi pi-sign-in text-2xl text-sky-500"></i>
+            <h1 class="text-2xl md:text-3xl font-bold">Registrar Ingreso</h1>
         </div>
 
-        <div class="grid lg:grid-cols-3 gap-5">
-        <div class="lg:col-span-2">
-            <VehicleForm v-model="form" :type-options="typeOptions" :clients="clients" />
+        <EntriesHeaderStats :stats="summary" />
+
+        <div class="grid lg:grid-cols-[1fr_420px] gap-6">
+        <VehicleForm v-model="form" :clientOptions="clientOptions" />
+
+        <LocationCard v-model="form.slotCode" :grid="grid" @submit="register" />
         </div>
 
-        <div>
-            <LocationCard v-model="form.slotCode" :slots="slotOptions" @submit="register">
-            <template #stats>
-                <EntriesHeaderStats :stats="stats" />
-            </template>
-            </LocationCard>
-        </div>
-        </div>
-
-        <ParkedTable :rows="tableRows" @checkout="checkout" />
-    </div>
+        <ParkedTable :rows="active" />
+    </section>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import di from '@/services/di'
-import { DEFAULT_CATEGORIES } from '@/Domain/Slots/categories'
-
 import VehicleForm from '@/components/entries/VehicleForm.vue'
 import LocationCard from '@/components/entries/LocationCard.vue'
 import ParkedTable from '@/components/entries/ParkedTable.vue'
 import EntriesHeaderStats from '@/components/entries/EntriesHeaderStats.vue'
-import { value } from '@primeuix/themes/aura/knob'
 
 const form = reactive({
-    plate: '', type: 'car', vip: false, disability: false,
-    client: null, slotCode: ''
+    plate: '', type: 'car', vip: false, disability: false, clientId: null, slotCode: ''
 })
 
-const clients = ref(['Cliente Ocasional']) 
-const stats = ref([])
-const active = ref([])
+const grid = ref([])            
+const active = ref([])        
+const summary = ref([])         
+const clients = ref([])
 
-const typeOptions = DEFAULT_CATEGORIES.map(c => ({ key: c.key, label: c.label }))
-const slotOptions = ['A1','A2','A4','A5','A6','M1','M2','M3'].map(x=>({label: x, value: x}))
+const clientOptions = ref([])   
+async function loadClients() {
+    clients.value = await di.clientsService.list()
+    entOptions.value = clients.value.map(c => ({ id: c.id, name: c.name }))
+}
 
 async function refresh() {
-    stats.value = await di.entriesService.summaryByType()
+    grid.value = await di.mapService.getGrid()
     active.value = await di.entriesService.listActive()
+    summary.value = await di.entriesService.summaryByType()
+}
+
+function normalizePlate(p) {
+    return (p || '').toUpperCase()
 }
 
 async function register() {
-    try {
-        form.plate = (form.plate || '').trim().toUpperCase()
-        await di.entriesService.registerEntry({ ...form })
-        form.plate = ''; form.slotCode = ''
-        await refresh()
-        alert('Ingreso registrado.')
-    } catch (e) {
-        alert(e.message || 'No se pudo registrar el ingreso.')
-    }
-}
+    const plate = normalizePlate(form.plate)
+    const valid = /^[A-Z]{3}-\d{3}$/.test(plate)
+    if (!valid) { alert('Placa inválida. Formato esperado: AAA-123.'); return }
+    if (!form.type || !form.slotCode) { alert('Faltan datos obligatorios (tipo, espacio).'); return }
 
-async function checkout(plate) {
-    await di.entriesService.checkOutByPlate(plate)
+    const clientName = clients.value.find(c => c.id === form.clientId)?.name || 'Cliente Ocasional'
+
+    await di.entriesService.registerEntry({
+        plate,
+        type: form.type,
+        slotCode: form.slotCode,
+        vip: !!form.vip,
+        disability: !!form.disability,
+        client: clientName,
+    })
+
+    form.plate = ''
+    form.slotCode = ''
     await refresh()
 }
 
-onMounted(refresh)
-
-const mapLabel = Object.fromEntries(DEFAULT_CATEGORIES.map(c => [c.key, c.label]))
-const tableRows = computed(() =>
-    active.value.map(e => ({ ...e, typeLabel: mapLabel[e.type] || e.type }))
-)
+onMounted(async () => {
+    await loadClients()
+    await refresh()
+})
 </script>

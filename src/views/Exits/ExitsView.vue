@@ -1,66 +1,69 @@
 <template>
-  <div class="space-y-6">
-    <div class="h-12 flex items-center px-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700">
-      <span class="font-semibold">Registrar Salida</span>
-      <div class="ml-auto"><EntriesHeaderStats :stats="stats" /></div>
+  <section class="space-y-6">
+    <div class="flex items-center gap-2">
+      <i class="pi pi-sign-out text-2xl text-sky-600" />
+      <h1 class="text-2xl md:text-3xl font-bold">Registrar Salida</h1>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-5">
-      <div>
-        <ExitSearch :active="active" @checkout="checkout" />
+    <div class="grid lg:grid-cols-2 gap-6">
+      <div class="space-y-6">
+        <SearchActive v-model="query" :found="selectedEntry" @enter="selectByQuery" />
+
+        <ActiveTable
+          :rows="rows" :total="total" :page="page" :rowsPerPage="rowsPerPage" :query="query"
+          @page="p => { page = p; fetch() }"
+          @search="v => { query = v.toUpperCase(); page = 1; fetch() }"
+          @select="onSelect"
+        />
       </div>
 
-      <div class="lg:col-span-2">
-        <ParkedTable :rows="tableRows" @checkout="checkout" />
-      </div>
+      <InvoiceCard :invoice="invoice" @process="processExit" />
     </div>
-
-    <p v-if="message" class="text-sm text-rose-600">{{ message }}</p>
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import di from '@/services/di'
-import { DEFAULT_CATEGORIES } from '@/Domain/Slots/categories'
+import SearchActive from '@/components/exits/SearchActive.vue'
+import ActiveTable from '@/components/exits/ActiveTable.vue'
+import InvoiceCard from '@/components/exits/InvoiceCard.vue'
 
-// Reutilizamos componentes ya existentes de 'entries'
-import EntriesHeaderStats from '@/components/entries/EntriesHeaderStats.vue'
-import ParkedTable from '@/components/entries/ParkedTable.vue'
+const query = ref('')
+const page = ref(1)
+const rowsPerPage = ref(6)
+const rows = ref([])
+const total = ref(0)
 
-// Nuevo componente local
-import ExitSearch from '@/components/exts/ExitSearch.vue'
+const selectedEntry = ref(null)
+const invoice = ref(null)
 
-const active = ref([])
-const stats  = ref([])
-const message = ref('')
-
-async function refresh() {
-  const [sum, list] = await Promise.all([
-    di.entriesService.summaryByType(),
-    di.entriesService.listActive()
-  ])
-  stats.value = sum
-  active.value = list
-}
-
-async function checkout(plate) {
-  message.value = ''
-  try {
-    const removed = await di.entriesService.checkOutByPlate(plate)
-    if (!removed) {
-      message.value = 'No se encontró un ingreso activo con esa placa.'
-    }
-    await refresh()
-  } catch (err) {
-    message.value = (err && err.message) ? err.message : String(err)
+async function fetch(){
+  const { items, total: t } = await di.exitsService.listActiveFiltered(query.value, page.value, rowsPerPage.value)
+  rows.value = items
+  total.value = t
+  if (selectedEntry.value) {
+    const still = items.find(e => e.plate === selectedEntry.value.plate)
+    if (!still) { selectedEntry.value = null; invoice.value = null }
   }
 }
 
-onMounted(refresh)
+async function onSelect(plate) {
+  selectedEntry.value = await di.exitsService.findActiveByPlate(plate)
+  invoice.value = await di.exitsService.buildInvoice(plate)
+}
+async function selectByQuery(){
+  if (!query.value) return
+  await onSelect(query.value)
+}
 
-const mapLabel = Object.fromEntries(DEFAULT_CATEGORIES.map(c => [c.key, c.label]))
-const tableRows = computed(() =>
-  active.value.map(e => ({ ...e, typeLabel: mapLabel[e.type] || e.type }))
-)
+async function processExit(){
+  if (!invoice.value?.entry?.plate) return
+  await di.exitsService.processExit(invoice.value.entry.plate)
+  selectedEntry.value = null
+  invoice.value = null
+  await fetch()
+}
+
+onMounted(fetch)
 </script>

@@ -1,40 +1,45 @@
 <template>
-    <div class="rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200/60 dark:border-slate-700">
-        <div class="px-5 py-3 border-b border-slate-200/60 dark:border-slate-700 flex items-center gap-2">
-            <i class="pi pi-map-marker text-xl text-sky-600"></i>
-            <h3 class="text-lg font-semibold">Ubicación</h3>
-        <div class="ml-auto"><slot name="stats" /></div>
-        </div>
+    <div class="rounded-2xl bg-slate-900/30 border border-slate-700 p-5">
+            <h3 class="text-lg font-semibold flex items-center gap-2 mb-4">
+            <i class="pi pi-map-marker text-sky-500"></i> Ubicación
+        </h3>
 
-        <div class="p-5 space-y-4">
+        <div class="space-y-4">
         <div>
-            <label class="block text-sm mb-1"><i class="pi pi-parking mr-2"></i>Espacio de estacionamiento:</label>
+            <label class="block text-sm mb-1">Espacio de estacionamiento:</label>
             <Select
                 v-model="selected"
-                :options="slots"
-                placeholder="Seleccionar espacio"
+                :options="slotOptions"
+                optionLabel="label"
+                optionValue="value"
                 class="w-full"
-            />
+                placeholder="Seleccionar espacio"
+                filter
+                filterPlaceholder="Buscar espacio..."
+            >
+            <template #value="{ value, placeholder }">
+                <span v-if="!value">{{ placeholder }}</span>
+                <span v-else>{{ value }}</span>
+            </template>
+            </Select>
         </div>
 
-        <div class="grid grid-cols-4 sm:grid-cols-6 gap-4">
+        <div class="grid grid-cols-4 sm:grid-cols-6 gap-3">
             <button
-                v-for="code in quickGrid"
-                :key="code.value"
-                type="button"
-                @click="selected = code.value"
-                class="inline-flex items-center justify-center px-3 py-2 rounded-lg border text-sm transition"
-                :class="selected === code.value
-                    ? 'border-emerald-600 bg-emerald-200 text-emerald-800'
-                    : 'border-emerald-300/70 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'"
+            v-for="opt in quick"
+            :key="opt.value"
+            type="button"
+            class="px-4 py-2 rounded-lg border transition text-sm"
+            :class="selected === opt.value
+                ? 'border-emerald-600 bg-emerald-200 text-emerald-800'
+                : 'border-emerald-300/70 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'"
+            @click="selected = opt.value"
             >
-                {{ code.label }}
+            {{ opt.label }}
             </button>
         </div>
 
-        <div class="pt-2">
-            <Button class="w-full" icon="pi pi-check-circle" label="Registrar Ingreso" @click="onSubmit" />
-        </div>
+        <Button class="w-full" icon="pi pi-check-circle" label="Registrar Ingreso" @click="$emit('submit')" />
         </div>
     </div>
 </template>
@@ -45,17 +50,19 @@ import Select from 'primevue/select'
 import Button from 'primevue/button'
 
 const props = defineProps({
-    modelValue: { type: String, default: '' },
-    slots: { type: Array, default: () => [] },
+    modelValue: { type: String, default: '' },           
+    grid: { type: Array, default: () => [] },             
 })
 const emit = defineEmits(['update:modelValue','submit'])
 
 const selected = computed({
     get: () => props.modelValue,
-    set: v   => emit('update:modelValue', v)
+    set: v  => emit('update:modelValue', v)
 })
 
-const quickGrid = computed(() => props.slots.slice(0, 8))
+const slotOptions = computed(() =>
+    props.grid.filter(c => !c.isOccupied).map(c => ({ label: c.code, value: c.code }))
+)
 
-function onSubmit() { emit('submit') }
+const quick = computed(() => slotOptions.value.slice(0, 12))
 </script>
