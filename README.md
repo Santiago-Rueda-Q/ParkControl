@@ -134,6 +134,7 @@ Its modular design allows for an easy transition from local storage to a real AP
 
 ```
 git clone https://github.com/usuario/ParkControl.git
+
 cd ParkControl
 
 npm install
