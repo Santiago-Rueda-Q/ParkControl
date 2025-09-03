@@ -1,11 +1,12 @@
 # 🚗 ParkControl  
 
 **Technologies:**  
-- [Vue 3](https://vuejs.org/)  
-- [Vite](https://vitejs.dev/)  
-- [TailwindCSS](https://tailwindcss.com/)  
-- [PrimeVue](https://primevue.org/)  
-- [Flowbite](https://flowbite.com/docs/getting-started/vue/)  
+[![Vue 3](https://img.shields.io/badge/Vue.js-3-green?logo=vue.js)](https://vuejs.org/)  
+[![Vite](https://img.shields.io/badge/Vite-Build-blueviolet?logo=vite)](https://vitejs.dev/)  
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Design-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)  
+[![PrimeVue](https://img.shields.io/badge/PrimeVue-UI-orange?logo=vue.js)](https://www.primefaces.org/primevue/)  
+[![Flowbite](https://img.shields.io/badge/Flowbite-Components-38BDF8?logo=tailwind-css)](https://flowbite.com/)  
+ 
 
 
 ## 📖 Description  
