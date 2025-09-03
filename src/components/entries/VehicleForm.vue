@@ -7,7 +7,7 @@
         <div class="p-5 space-y-4">
         <div>
             <label class="block text-sm mb-1">Placa:</label>
-            <InputText v-model="local.plate" class="w-full" placeholder="AAA-123" @input="maskPlate" />
+            <InputText v-model="local.plate" class="w-full" placeholder="AAA-123" @input="maskPlate" @blur="maskPlate"/>
             <small v-if="plateError" class="text-rose-500">{{ plateError }}</small>
         </div>
 
@@ -70,12 +70,18 @@ const typeOptions = [
 ]
 
 function maskPlate() {
-    let s = (local.plate||'').toUpperCase().replace(/[^A-Z0-9-]/g,'')
-    s = s.replace(/-/g,'')
-    const L = s.slice(0,3).replace(/[^A-Z]/g,'')
-    const D = s.slice(3,6).replace(/[^0-9]/g,'')
-    local.plate = L + (L.length===3?'-':'') + D
+    let s = (local.plate || '')
+        .toUpperCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[‐-‒–—−]/g, '-')    
+        .replace(/[^A-Z0-9-]/g,'');   
+
+    s = s.replace(/-/g,'');         
+    const L = s.slice(0,3).replace(/[^A-Z]/g,'');
+    const D = s.slice(3,6).replace(/[^0-9]/g,'');
+    local.plate = L + (L.length===3?'-':'') + D;
 }
+
 const plateError = computed(() => {
     if (!local.plate) return null
     return /^[A-Z]{3}-\d{3}$/.test(local.plate) ? null : 'Formato esperado: AAA-123 (falta separación o caracteres inválidos).'

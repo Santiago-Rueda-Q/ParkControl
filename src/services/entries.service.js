@@ -48,19 +48,44 @@ export class EntriesService {
     }
 
     async registerEntry(data) {
-        const plate = this.normalizePlate(data.plate)  
 
-        if (!data.type)     throw new Error('Seleccione tipo de vehículo.')
-        if (!data.slotCode) throw new Error('Seleccione espacio.')
+    const rawOriginal = String(data.plate ?? '');
+    const raw = rawOriginal
+        .toUpperCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') 
+        .replace(/[‐-‒–—−]/g, '-')                        
+        .trim();
 
-        if (await this.isPlateActive(plate)) {
-        throw new Error('La placa ya tiene un ingreso activo.')
-        }
-        if (await this.isSlotOccupied(data.slotCode)) {
-        throw new Error('El espacio seleccionado ya está ocupado.')
-        }
+    let plate = String(data.plate ?? '')
+    .toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[‐-‒–—−]/g, '-')   
+    .trim();
+    
+    if (!plate) {
+        const m = raw.replace(/[^A-Z0-9]/g, ' ')           // deja A-Z0-9 y separa lo demás
+                    .match(/([A-Z]{3})\s*(\d{3})/);       // AAA   123
+        if (m) plate = `${m[1]}-${m[2]}`;
+    }
 
-        const entry = {
+    if (!/^[A-Z]{3}-\d{3}$/.test(plate)) {
+    const cleaned = plate.replace(/[^A-Z0-9]/g, '');
+    if (cleaned.length >= 6) plate = `${cleaned.slice(0,3)}-${cleaned.slice(3,6)}`;
+    if (!plate || !plate.trim()) plate = 'SIN-PLT';
+    }
+
+
+    if (!data.type)     throw new Error('Seleccione tipo de vehículo.');
+    if (!data.slotCode) throw new Error('Seleccione espacio.');
+
+    if (await this.isPlateActive(plate)) {
+        throw new Error('La placa ya tiene un ingreso activo.');
+    }
+    if (await this.isSlotOccupied(data.slotCode)) {
+        throw new Error('El espacio seleccionado ya está ocupado.');
+    }
+
+    const entry = {
         id: crypto?.randomUUID?.() || String(Date.now()),
         plate,
         type: data.type,
@@ -69,11 +94,13 @@ export class EntriesService {
         disability: !!data.disability,
         client: data.client || 'Cliente Ocasional',
         startedAtISO: new Date().toISOString(),
-        }
+    };
 
-        await this.repo.add(entry)
-        return entry
+    await this.repo.add(entry);
+    return entry;
     }
+
+
 
     async checkOutByPlate(plate) {
         return await this.repo.removeByPlate(plate)
