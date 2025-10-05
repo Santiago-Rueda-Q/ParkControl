@@ -38,4 +38,9 @@ app.component('Checkbox', Checkbox)
 app.component('DataTable', DataTable)
 app.component('Column', Column)
 
+import di from './services/di.js'
+import { applyTheme } from './services/settings.service.js'
+
+di.settingsService.load().then(s => applyTheme(s.theme))
+
 app.mount('#app')
