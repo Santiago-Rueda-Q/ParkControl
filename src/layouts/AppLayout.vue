@@ -24,7 +24,7 @@
             <button class="p-2 rounded-lg hover:bg-slate-800" @click="open=true" aria-label="Abrir menú">
             <i class="pi pi-bars text-lg"></i>
             </button>
-            <span class="font-semibold">ParkControl</span>
+            <span class="font-semibold">{{ appName }}</span>
         </header>
 
         <main class="flex-1 min-h-0 p-6">
