@@ -1,18 +1,38 @@
+
+import LocalRatesRepository from '@/Infrastructure/Rates/LocalRatesRepository'
+
+
 export class RatesService {
-    /** @param {import('@/Domain/Rates/RatesRepository').RatesRepository} repo */
-    constructor(repo) { this.repo = repo }
+  constructor(ratesRepository) {
 
-    async pricePerHour(type, flags = {}) {
-        const r = await this.repo.getRates()
-        let base = r[type] ?? 0
-        if (flags.vip)        base *= (r.vipFactor ?? 1)
-        if (flags.disability) base *= (r.disabilityFactor ?? 1)
-        return Math.round(base * 100) / 100
-    }
+    this.ratesRepository = ratesRepository || new LocalRatesRepository()
+  }
 
-    billableHours(startISO, endISO = new Date().toISOString()) {
-        const ms = new Date(endISO) - new Date(startISO)
-        const h  = Math.ceil(ms / 3_600_000)
-        return Math.max(1, h)
-    }
+  getRates() {
+    return this.ratesRepository.getRates()
+  }
+
+  saveRates(rates) {
+    return this.ratesRepository.saveRates(rates)
+  }
+
+  saveRatesConfig(rates) {
+    return this.saveRates(rates)
+  }
 }
+
+export const ratesService = new RatesService(new LocalRatesRepository())
+
+export function getRates() {
+  return ratesService.getRates()
+}
+
+export function saveRates(rates) {
+  return ratesService.saveRates(rates)
+}
+
+export function saveRatesConfig(rates) {
+  return ratesService.saveRatesConfig(rates)
+}
+
+export default ratesService

@@ -1,13 +1,22 @@
-import { RatesRepository } from '@/Domain/Rates/RatesRepository'
+export default class LocalRatesRepository {
+  constructor() {
+    this.key = "rates_config"
+  }
 
-export class LocalRatesRepository extends RatesRepository {
-    async getRates() {
-        return {
-            car: 58,
-            motorcycle: 35,
-            bicycle: 8,
-            vipFactor: 1.2,
-            disabilityFactor: 1.0,
-        }
+  getRates() {
+    const data = localStorage.getItem(this.key)
+    if (data) return JSON.parse(data)
+
+    return {
+      car: 5,
+      moto: 3,
+      bike: 1,
+      vipDiscount: 20
     }
+  }
+
+  saveRates(rates) {
+    localStorage.setItem(this.key, JSON.stringify(rates))
+    return rates
+  }
 }
