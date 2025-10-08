@@ -17,7 +17,7 @@ import { LocalMapRepository }     from '@/Infrastructure/Map/LocalMapRepository'
 import { MapService }             from '@/services/map.service'
 
 import { LocalSettingsRepository } from '@/Infrastructure/Settings/LocalSettingsRepository'
-import { SettingsService }        from '@/settings.service.js'
+import { SettingsService } from '@/services/settings.service.js'
 
 import { ReportsService } from './reports.service'
 
