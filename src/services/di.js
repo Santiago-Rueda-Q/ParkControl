@@ -32,11 +32,11 @@ const di = {
 }
 
 di.slotsService   = new SlotsService(di.slotsRepository)
+di.ratesService     = new RatesService(di.ratesRepository)
 di.entriesService = new EntriesService(di.entriesRepository)
 di.clientsService = new ClientsService(di.clientsRepository)
 di.mapService     = new MapService(di.mapRepository, di.entriesService)
-di.exitsService   = new ExitsService(di.exitsRepository, di.entriesService, di.slotsService)
-di.ratesService  = new RatesService(di.ratesRepository)
+di.exitsService   = new ExitsService(di.exitsRepository, di.entriesService, di.ratesService)
 di.settingsService = new SettingsService(di.settingsRepository)
 di.reportsService = new ReportsService(di.entriesService, di.ratesService)
 

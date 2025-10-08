@@ -1,25 +1,36 @@
+// src/services/map.service.js
 const A_CODE = 'A'.charCodeAt(0)
 
 export class MapService {
-    /** @param {import('./entries.service').EntriesService} entriesService */
-    constructor(repo, entriesService) {
-        this.repo = repo
+    /**
+     * @param {import('@/Domain/Map/MapRepository').MapRepository} mapRepo
+     * @param {import('@/services/entries.service').EntriesService} entriesService
+     */
+    constructor(mapRepo, entriesService) {
+        this.mapRepo = mapRepo
         this.entriesService = entriesService
     }
 
     async getConfig() {
-        const cfg = await this.repo.loadConfig()
+        const repo = this.mapRepo
+        const raw  = repo?.loadConfig ? await repo.loadConfig() : {}
+        const cfg  = raw || {}
         return {
-            rows: Math.max(1, Number(cfg.rows || 1)),
-            cols: Math.max(1, Number(cfg.cols || 1)),
-            vip: Array.isArray(cfg.vip) ? cfg.vip : [],
-            disability: Array.isArray(cfg.disability) ? cfg.disability : [],
+        rows: Math.max(1, Number(cfg.rows || 1)),
+        cols: Math.max(1, Number(cfg.cols || 1)),
+        vip: Array.isArray(cfg.vip) ? cfg.vip : [],
+        disability: Array.isArray(cfg.disability) ? cfg.disability : [],
         }
     }
 
     async saveConfig({ rows, cols, vip = [], disability = [] }) {
-        const cfg = { rows: Math.max(1, rows|0), cols: Math.max(1, cols|0), vip, disability }
-        await this.repo.saveConfig(cfg)
+        const cfg = {
+        rows: Math.max(1, rows|0),
+        cols: Math.max(1, cols|0),
+        vip,
+        disability
+        }
+        if (this.mapRepo?.saveConfig) await this.mapRepo.saveConfig(cfg)
         return cfg
     }
 
@@ -35,35 +46,39 @@ export class MapService {
     }
 
     async getGrid() {
-        const cfg = await this.getConfig()
-        const codes = this.generateCodes(cfg.rows, cfg.cols)
+        const cfg     = await this.getConfig()
+        const codes   = this.generateCodes(cfg.rows, cfg.cols)
 
-        const active = await this.entriesService.listActive()
-        const occupied = new Set(active.map(e => String(e.slotCode || '').toUpperCase()))
-        const vipSet = new Set((cfg.vip || []).map(x => x.toUpperCase()))
-        const disSet = new Set((cfg.disability || []).map(x => x.toUpperCase()))
+        const active  = await this.entriesService.listActive()
+        const busy    = new Set(active.map(e => String(e.slotCode || '').toUpperCase().trim()))
+        const vipSet  = new Set((cfg.vip || []).map(x => String(x).toUpperCase().trim()))
+        const disSet  = new Set((cfg.disability || []).map(x => String(x).toUpperCase().trim()))
 
-        return codes.map(code => ({
-        code,
-        isOccupied: occupied.has(code.toUpperCase()),
-        isVip: vipSet.has(code.toUpperCase()),
-        isDisability: disSet.has(code.toUpperCase()),
-        }))
+        return codes.map(code => {
+        const up = String(code).toUpperCase().trim()
+        return {
+            code,
+            isOccupied:  busy.has(up),
+            isVip:       vipSet.has(up),
+            isDisability: disSet.has(up),
+        }
+        })
     }
 
     async toggleVip(code) {
         const cfg = await this.getConfig()
-        const up = code.toUpperCase()
-        const set = new Set(cfg.vip.map(x => x.toUpperCase()))
+        const up  = String(code).toUpperCase().trim()
+        const set = new Set(cfg.vip.map(x => String(x).toUpperCase().trim()))
         set.has(up) ? set.delete(up) : set.add(up)
         cfg.vip = Array.from(set)
         await this.saveConfig(cfg)
         return cfg
     }
+
     async toggleDisability(code) {
         const cfg = await this.getConfig()
-        const up = code.toUpperCase()
-        const set = new Set(cfg.disability.map(x => x.toUpperCase()))
+        const up  = String(code).toUpperCase().trim()
+        const set = new Set(cfg.disability.map(x => String(x).toUpperCase().trim()))
         set.has(up) ? set.delete(up) : set.add(up)
         cfg.disability = Array.from(set)
         await this.saveConfig(cfg)

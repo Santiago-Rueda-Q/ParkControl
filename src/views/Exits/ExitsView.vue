@@ -17,7 +17,7 @@
         />
       </div>
 
-      <InvoiceCard :invoice="invoice" @process="processExit" />
+      <InvoiceCard :invoice="invoice" :settings="settings" @process="processExit" />
     </div>
   </section>
 </template>
@@ -37,6 +37,7 @@ const total = ref(0)
 
 const selectedEntry = ref(null)
 const invoice = ref(null)
+const settings = ref(null)
 
 async function fetch(){
   const { items, total: t } = await di.exitsService.listActiveFiltered(query.value, page.value, rowsPerPage.value)
@@ -65,5 +66,8 @@ async function processExit(){
   await fetch()
 }
 
-onMounted(fetch)
+onMounted(async () => {
+  settings.value = await di.settingsService.load().catch(()=>null)
+  await fetch()
+})
 </script>

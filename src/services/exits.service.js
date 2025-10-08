@@ -1,3 +1,5 @@
+import { normalizePlate, isAnonymousPlate } from '@/Domain/Entries/plate.utils.js';
+
 export class ExitsService {
 
   constructor(repo, entriesService, ratesService) {
@@ -7,9 +9,15 @@ export class ExitsService {
   }
 
   async listActiveFiltered(query = '', page = 1, size = 6) {
-    const q = (query || '').trim().toUpperCase()
+    const raw = (query || '').trim()
+    const q = raw ? (() => { try { return normalizePlate(raw) } catch { return raw.toUpperCase() } })() : ''
     const all = await this.entriesService.listActive()
-    const filtered = q ? all.filter(e => (e.plate || '').toUpperCase().includes(q)) : all
+    const filtered = q
+      ? all.filter(e => {
+          try { return normalizePlate(e.plate).includes(q) }
+          catch { return (e.plate || '').toUpperCase().includes(String(q).toUpperCase()) }
+        })
+      : all
     const total = filtered.length
     const start = (page - 1) * size
     const items = filtered.slice(start, start + size)
@@ -17,9 +25,19 @@ export class ExitsService {
   }
 
   async findActiveByPlate(plate) {
-    const p = (plate || '').toUpperCase()
+    const raw = String(plate ?? '').toUpperCase().trim();
+    const p = isAnonymousPlate(raw) ? 'SIN-PLT' : (() => {
+      try { return normalizePlate(raw) } catch { return raw }
+      })();
     const all = await this.entriesService.listActive()
-    return all.find(e => (e.plate || '').toUpperCase() === p) || null
+    return all.find(e => {
+    try {
+      const ep = isAnonymousPlate(e.plate) ? 'SIN-PLT' : normalizePlate(e.plate);
+      return ep === p;
+    } catch {
+      return (e.plate || '').toUpperCase().trim() === p;
+    }
+    }) || null
   }
 
   async buildInvoice(plate) {
@@ -39,8 +57,13 @@ export class ExitsService {
     const removed = await this.entriesService.checkOutByPlate(plate)
     if (!removed) throw new Error('No había un ingreso activo para esa placa.')
     await this.repo.append({
-      ...invoice.entry,
-      endedAtISO: invoice.endedAtISO,
+      plate: invoice.entry.plate,
+      type: invoice.entry.type,
+      space: invoice.entry.slotCode,
+      client: invoice.entry.client,
+      isVip: !!invoice.entry.vip,
+      entryAt: new Date(invoice.entry.startedAtISO).toISOString(),
+      exitAt:  invoice.endedAtISO,
       hours: invoice.hours,
       ratePerHour: invoice.ratePerHour,
       total: invoice.total,

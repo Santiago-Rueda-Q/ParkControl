@@ -19,7 +19,7 @@ export class ReportsService {
   normalizeMovement(x) {
     if (!x) return null
     const entryAt = new Date(x.entryAt ?? x.ingreso ?? x.Ingreso ?? x.fchIngreso ?? x.fechaIngreso ?? x.in)
-    const exitAt  = x.exitAt  ?? x.salida ?? x.Salida ?? x.fchSalida ?? x.fechaSalida ?? x.out
+    const exitAt  = x.exitAt  ?? x.endedAtISO ?? x.salida ?? x.Salida ?? x.fchSalida ?? x.fechaSalida ?? x.out
       ? new Date(x.exitAt ?? x.salida ?? x.Salida ?? x.fchSalida ?? x.fechaSalida ?? x.out)
       : null
     const type    = String(x.type ?? x.tipo ?? x.vehicleType ?? 'Car')

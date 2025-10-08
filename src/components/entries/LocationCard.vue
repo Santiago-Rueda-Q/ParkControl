@@ -19,7 +19,7 @@
             >
             <template #value="{ value, placeholder }">
                 <span v-if="!value">{{ placeholder }}</span>
-                <span v-else>{{ value }}</span>
+                <span v-else>{{ slotOptions.find(o => o.value===value)?.label || value }}</span>
             </template>
             </Dropdown>
         </div>
@@ -34,8 +34,12 @@
             {{ opt.label }}
             </button>
         </div>
-
-        <Button class="w-full" icon="pi pi-check-circle" label="Registrar Ingreso" @click="$emit('submit')" />
+        <Button
+            class="w-full"
+            icon="pi pi-check-circle"
+            label="Registrar Ingreso"
+            @click="onSubmit"
+        />  
         </div>
     </div>
 </template>
@@ -50,6 +54,14 @@ const props = defineProps({
     grid: { type:Array, default:()=>[] }       
 })
 const emit = defineEmits(['update:modelValue','submit'])
+
+function onSubmit(){
+    if(!selected.value){
+        alert('Seleccione un espacio disponible.');
+        return;
+    }
+    emit('submit');
+}
 
 const selected = computed({
     get: () => props.modelValue,

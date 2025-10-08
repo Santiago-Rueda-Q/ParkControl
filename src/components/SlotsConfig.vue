@@ -49,7 +49,8 @@ onMounted(async () => {
 async function onSave() {
   try {
     saving.value = true
-    await di.slotsService.saveConfig(form.value)
+    await di.slotsService.saveConfig(form.value)   
+    form.value = await di.slotsService.getCategoriesWithValues() 
     alert('Configuración guardada.')
   } finally {
     saving.value = false

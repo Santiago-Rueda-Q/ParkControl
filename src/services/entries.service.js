@@ -1,10 +1,7 @@
-// src/Application/Entries/EntriesService.js
-import { normalizePlate } from '@/Domain/Entries/plate.utils.js';
+import { normalizePlate, isAnonymousPlate } from '@/Domain/Entries/plate.utils.js';
 
 export class EntriesService {
-    /** @param {import('@/Domain/Entries/ntriesRepository').EntriesRepository} repo */
-    constructor(repo) { this.repo = repo }
-
+    /** @param {import('@/Domain/Entries/EntriesRepository').EntriesRepository} repo */    constructor(repo) { this.repo = repo }
     async listActive() {
         const list = await this.repo.listActive();
         return list
@@ -24,9 +21,17 @@ export class EntriesService {
     }
 
     async isPlateActive(plate) {
-        const p = normalizePlate(plate); // <-- siempre normalizado
+        const p = normalizePlate(plate);
+        if (p === 'SIN-PLT') return false;
         const list = await this.listActive();
-        return list.some(e => normalizePlate(e.plate) === p);
+        return list.some(e => {
+        try { 
+            const ep = normalizePlate(e.plate);
+            if (ep === 'SIN-PLT') return false;
+            return ep === p;
+        }
+        catch { return false; }
+        });
     }
 
     async isSlotOccupied(slotCode) {
@@ -53,17 +58,16 @@ export class EntriesService {
         if (!data.type)     throw new Error('Seleccione tipo de vehículo.');
         if (!data.slotCode) throw new Error('Seleccione espacio.');
 
-        // normalización de placa centralizada
+        const rawPlate = String(data.plate ?? '').trim();
         let plate;
-        try {
-        plate = normalizePlate(data.plate ?? '');
-        } catch {
-        // fallback: si no hay placa legible, usar marcador
+        if (rawPlate === '') {
         plate = 'SIN-PLT';
+        } else {
+        plate = normalizePlate(rawPlate);
         }
 
-        if (await this.isPlateActive(plate)) {
-        throw new Error('La placa ya tiene un ingreso activo.');
+        if (plate !== 'SIN-PLT' && await this.isPlateActive(plate)) {
+            throw new Error('La placa ya tiene un ingreso activo.');
         }
         if (await this.isSlotOccupied(data.slotCode)) {
         throw new Error('El espacio seleccionado ya está ocupado.');
@@ -85,7 +89,8 @@ export class EntriesService {
     }
 
     async checkOutByPlate(plate) {
-        const p = normalizePlate(plate);
-        return await this.repo.removeByPlate(p);
+        const raw = String(plate ?? '').toUpperCase().trim();
+        const p = isAnonymousPlate(raw) ? 'SIN-PLT' : normalizePlate(raw);
+        return await this.repo.removeByPlate(p);    
     }
 }

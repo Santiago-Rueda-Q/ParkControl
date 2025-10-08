@@ -7,8 +7,11 @@
 
         <div class="p-5 space-y-4" v-if="invoice">
         <div>
-            <h4 class="font-semibold text-lg">AutoCinco</h4>
-            <p class="text-sm text-slate-500">AV 5 CALLE 18<br/>Tel: 555-123-4567</p>
+            <h4 class="font-semibold text-lg">{{ props.settings?.appName || 'ParkControl' }}</h4>
+            <p class="text-sm text-slate-500">
+                {{ props.settings?.businessAddress || '' }}<br/>
+                Tel: {{ props.settings?.businessPhone || '' }}
+            </p>
             <p class="mt-2 font-semibold">COMPROBANTE DE PAGO</p>
             <p class="text-sm">Fecha: {{ now }}</p>
         </div>
@@ -46,8 +49,11 @@
 
 <script setup>
 import Button from 'primevue/button'
-const props = defineProps({ invoice: Object })
+const props = defineProps({ invoice: Object, settings: Object })
 const now = new Date().toLocaleString()
 function fmt(iso){ return new Date(iso).toLocaleString() }
-function money(n){ return `S/. ${Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2})}` }
+function money(n){
+    const sym = props.settings?.currencySymbol ?? '$'
+    return `${sym}${Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2})}`
+}
 </script>

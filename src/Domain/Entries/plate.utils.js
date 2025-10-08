@@ -1,3 +1,7 @@
+export function isAnonymousPlate(x){
+    return String(x ?? '').toUpperCase().trim() === 'SIN-PLT';
+}
+
 export function normalizePlate(raw) {
     const s = String(raw ?? '')
         .toUpperCase()
@@ -5,6 +9,7 @@ export function normalizePlate(raw) {
         .replace(/[‐-‒–—−]/g, '-') 
         .trim();
 
+    if (isAnonymousPlate(s)) return 'SIN-PLT';
     // si ya viene como AAA-123
     if (/^[A-Z]{3}-\d{3}$/.test(s)) return s;
 
@@ -12,9 +17,5 @@ export function normalizePlate(raw) {
     const m = s.replace(/[^A-Z0-9]/g, ' ').match(/([A-Z]{3})\s*(\d{3})/);
     if (m) return `${m[1]}-${m[2]}`;
 
-    // último intento: compactar y reinsertar guion
-    const cleaned = s.replace(/[^A-Z0-9]/g, '');
-    if (cleaned.length >= 6) return `${cleaned.slice(0,3)}-${cleaned.slice(3,6)}`;
-
-    throw new Error('Placa inválida (formato esperado AAA-123).');
+    throw new Error('Formato de placa inválido. Use AAA-123 (tres letras y tres dígitos).');
 }

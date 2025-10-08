@@ -1,5 +1,5 @@
 import { EntriesRepository } from '@/Domain/Entries/EntriesRepository';
-import { normalizePlate } from '@/Domain/Entries/plate.utils.js';
+import { normalizePlate, isAnonymousPlate } from '@/Domain/Entries/plate.utils.js';
 
 const KEY = 'pc:entries-active';
 
@@ -16,15 +16,25 @@ export class LocalEntriesRepository extends EntriesRepository {
 
     async add(entry) {
         const list = await this.listActive();
-        list.push(entry);
+        list.push({
+            ...entry,
+            plate: (() => {
+            try { return normalizePlate(entry.plate); }
+            catch { return 'SIN-PLT'; }
+            })(),
+            slotCode: String(entry.slotCode || '').toUpperCase().trim(),
+        });
         localStorage.setItem(KEY, JSON.stringify(list));
     }
 
     async removeByPlate(plate) {
-        const target = normalizePlate(plate);
+        const target = isAnonymousPlate(plate) ? 'SIN-PLT' : normalizePlate(plate);
         const list = await this.listActive();
         const idx = list.findIndex(e => {
-        try { return normalizePlate(e.plate) === target; } catch { return false; }
+        try {
+            const ep = isAnonymousPlate(e.plate) ? 'SIN-PLT' : normalizePlate(e.plate);
+            return ep === target;
+        }catch { return false; }
         });
         if (idx >= 0) {
         const [removed] = list.splice(idx, 1);
