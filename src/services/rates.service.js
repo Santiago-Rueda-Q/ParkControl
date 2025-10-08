@@ -1,8 +1,4 @@
 // Clase principal
-
-import LocalRatesRepository from '@/Infrastructure/Rates/LocalRatesRepository'
-
-
 export class RatesService {
   /** @param {any} repo Debe exponer getRates() o load() */
   constructor(repo) { this.repo = repo }

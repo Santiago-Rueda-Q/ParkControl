@@ -1,108 +1,91 @@
+// src/Application/Entries/EntriesService.js
+import { normalizePlate } from '@/Domain/Entries/plate.utils.js';
+
 export class EntriesService {
-    /** @param {import('@/Domain/Entries/EntriesRepository').EntriesRepository} repo */
+    /** @param {import('@/Domain/Entries/ntriesRepository').EntriesRepository} repo */
     constructor(repo) { this.repo = repo }
 
-    normalizePlate(raw) {
-
-        const cleaned = String(raw ?? '')
-        .toUpperCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[‐-‒–—−]/g, '-')        
-        .replace(/[^A-Z0-9]/g, '');        
-
-        const letters = (cleaned.match(/[A-Z]/g) || []).join('').slice(0, 3);
-        const digits  = (cleaned.match(/\d/g)   || []).join('').slice(0, 3);
-
-        if (letters.length === 3 && digits.length === 3) {
-        return `${letters}-${digits}`;
-        }
-        throw new Error('Placa inválida (AAA-123).');
-    }
-
     async listActive() {
-        const list = await this.repo.listActive()
-        return list.sort((a,b) => new Date(a.startedAtISO) - new Date(b.startedAtISO))
+        const list = await this.repo.listActive();
+        return list
+        .filter(e => e && e.startedAtISO)
+        .sort((a,b) => new Date(a.startedAtISO) - new Date(b.startedAtISO));
     }
 
     async summaryByType() {
-        const list = await this.listActive()
-        const m = { car:0, motorcycle:0, bicycle:0, vip:0, disability:0 }
+        const list = await this.listActive();
+        const summary = { car:0, motorcycle:0, bicycle:0, vip:0, disability:0 };
         for (const e of list) {
-        if (m[e.type] != null) m[e.type]++
-        if (e.vip)        m.vip++
-        if (e.disability) m.disability++
+        if (summary[e.type] != null) summary[e.type]++; // cuenta por tipo
+        if (e.vip) summary.vip++;                       // flags como atributos
+        if (e.disability) summary.disability++;
         }
-        return m
+        return summary;
     }
 
     async isPlateActive(plate) {
-        const list = await this.listActive()
-        const p = plate.toUpperCase()
-        return list.some(e => (e.plate||'').toUpperCase() === p)
+        const p = normalizePlate(plate); // <-- siempre normalizado
+        const list = await this.listActive();
+        return list.some(e => normalizePlate(e.plate) === p);
     }
 
     async isSlotOccupied(slotCode) {
-        const p = (slotCode||'').toUpperCase()
-        const list = await this.listActive()
-        return list.some(e => (e.slotCode||'').toUpperCase() === p)
+        const p = String(slotCode||'').toUpperCase().trim();
+        const list = await this.listActive();
+        return list.some(e => String(e.slotCode||'').toUpperCase().trim() === p);
     }
 
+    /**
+     * @typedef {Object} EntryInput
+     * @property {string} plate
+     * @property {'car'|'motorcycle'|'bicycle'} type
+     * @property {string} slotCode
+     * @property {boolean} [vip]
+     * @property {boolean} [disability]
+     * @property {string} [client]
+     */
+
+    /** @param {EntryInput} data */
     async registerEntry(data) {
+        if (!data || typeof data !== 'object') {
+        throw new Error('Entrada inválida.');
+        }
+        if (!data.type)     throw new Error('Seleccione tipo de vehículo.');
+        if (!data.slotCode) throw new Error('Seleccione espacio.');
 
-    const rawOriginal = String(data.plate ?? '');
-    const raw = rawOriginal
-        .toUpperCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') 
-        .replace(/[‐-‒–—−]/g, '-')                        
-        .trim();
+        // normalización de placa centralizada
+        let plate;
+        try {
+        plate = normalizePlate(data.plate ?? '');
+        } catch {
+        // fallback: si no hay placa legible, usar marcador
+        plate = 'SIN-PLT';
+        }
 
-    let plate = String(data.plate ?? '')
-    .toUpperCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[‐-‒–—−]/g, '-')   
-    .trim();
-    
-    if (!plate) {
-        const m = raw.replace(/[^A-Z0-9]/g, ' ')           // deja A-Z0-9 y separa lo demás
-                    .match(/([A-Z]{3})\s*(\d{3})/);       // AAA   123
-        if (m) plate = `${m[1]}-${m[2]}`;
-    }
-
-    if (!/^[A-Z]{3}-\d{3}$/.test(plate)) {
-    const cleaned = plate.replace(/[^A-Z0-9]/g, '');
-    if (cleaned.length >= 6) plate = `${cleaned.slice(0,3)}-${cleaned.slice(3,6)}`;
-    if (!plate || !plate.trim()) plate = 'SIN-PLT';
-    }
-
-
-    if (!data.type)     throw new Error('Seleccione tipo de vehículo.');
-    if (!data.slotCode) throw new Error('Seleccione espacio.');
-
-    if (await this.isPlateActive(plate)) {
+        if (await this.isPlateActive(plate)) {
         throw new Error('La placa ya tiene un ingreso activo.');
-    }
-    if (await this.isSlotOccupied(data.slotCode)) {
+        }
+        if (await this.isSlotOccupied(data.slotCode)) {
         throw new Error('El espacio seleccionado ya está ocupado.');
-    }
+        }
 
-    const entry = {
-        id: crypto?.randomUUID?.() || String(Date.now()),
+        const entry = {
+        id: (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`),
         plate,
         type: data.type,
-        slotCode: String(data.slotCode).toUpperCase(),
+        slotCode: String(data.slotCode).toUpperCase().trim(),
         vip: !!data.vip,
         disability: !!data.disability,
-        client: data.client || 'Cliente Ocasional',
+        client: data.client?.trim() || 'Cliente Ocasional',
         startedAtISO: new Date().toISOString(),
-    };
+        };
 
-    await this.repo.add(entry);
-    return entry;
+        await this.repo.add(entry);
+        return entry;
     }
 
-
-
     async checkOutByPlate(plate) {
-        return await this.repo.removeByPlate(plate)
+        const p = normalizePlate(plate);
+        return await this.repo.removeByPlate(p);
     }
 }
