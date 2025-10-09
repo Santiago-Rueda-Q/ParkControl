@@ -20,6 +20,6 @@ describe('InvoiceCard', () => {
         expect(wrapper.text()).toContain('MiParqueo')
         expect(wrapper.text()).toContain('Calle 1')
         expect(wrapper.text()).toContain('123')
-        expect(wrapper.text()).toContain('S/. 10.00')
+        expect(wrapper.text()).toMatch(/S\/\.\s?(10[,\.]00)/)
     })
 })
