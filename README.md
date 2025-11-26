@@ -1,13 +1,12 @@
-# 🚗 ParkControl  
 
 **Technologies:**  
-[![Vue 3](https://img.shields.io/badge/Vue.js-3-green?logo=vue.js)](https://vuejs.org/)  
-[![Vite](https://img.shields.io/badge/Vite-Build-blueviolet?logo=vite)](https://vitejs.dev/)  
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Design-06B6D4?logo=tailwind-css)](https://tailwindcss.com/)  
-[![PrimeVue](https://img.shields.io/badge/PrimeVue-UI-orange?logo=vue.js)](https://www.primefaces.org/primevue/)  
-[![Flowbite](https://img.shields.io/badge/Flowbite-Components-38BDF8?logo=tailwind-css)](https://flowbite.com/)  
- 
+- Vue 3  
+- Vite  
+- TailwindCSS  
+- PrimeVue  
+- Flowbite  
 
+---
 
 System Purpose
 --------------
@@ -226,7 +225,7 @@ The dependency injection container [src/services/di.js](https://github.com/Sant
  
 ## 📂 Project Structure  
 
-```
+```bash
 ├── 📁 .git/             🚫 (hidden)
 ├── 📁 .vscode/          🚫 (local config)
 ├── 📁 ParkControl/
@@ -322,23 +321,14 @@ The dependency injection container [src/services/di.js](https://github.com/Sant
 ├── 📄 package-lock.json
 ├── 📄 package.json
 └── 📄 vite.config.js
-```
----
-# 🚀 Installation & Execution  
-
-
-```
 git clone https://github.com/usuario/ParkControl.git
-
 cd ParkControl
-
 npm install
+npm run dev
+👥 Authors
 
-npm run build
-```
----
-## 👥 Authors
-- Santiago Rueda Quintero
-- Eliecer Guevara Fuentes
-- Lisandro Rueda Thomas
----
+Santiago Rueda Quintero
+
+Eliecer Guevara Fuentes
+
+Lisandro Rueda Thomas
